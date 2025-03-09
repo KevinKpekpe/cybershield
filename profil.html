@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil Utilisateur - CyberShield</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/style.css">
+</head>
+
+<body>
+    <header>
+        <nav>
+            <div class="logo">CyberShield</div>
+            <ul>
+                <li><a href="index.html">Accueil</a></li>
+                <li><a href="types.html">Types</a></li>
+                <li><a href="#about">À propos</a></li>
+                <li><a href="#contact">Contact</a></li>
+                <li><a href="profil.html" class="active">Profil</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero" style="min-height: 300px;">
+        <div class="hero-content">
+            <h1>Mon Profil</h1>
+            <p>Gérez vos informations personnelles et votre sécurité</p>
+        </div>
+    </section>
+
+    <section class="profile">
+        <div class="profile-container">
+            <!-- Section Informations Personnelles -->
+            <div class="profile-card">
+                <h2 class="section-title">Informations Personnelles</h2>
+                <form class="profile-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Nom complet</label>
+                            <input type="text" value="Jean Dupont" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Adresse email</label>
+                            <input type="email" value="jean.dupont@example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Téléphone</label>
+                            <input type="tel" value="+33 6 12 34 56 78">
+                        </div>
+                        <div class="form-group">
+                            <label>Adresse</label>
+                            <input type="text" value="123 Rue de Paris">
+                        </div>
+                    </div>
+                    <button type="submit" class="submit-btn">Mettre à jour</button>
+                </form>
+            </div>
+
+            <!-- Section Sécurité -->
+            <div class="profile-card">
+                <h2 class="section-title">Sécurité du Compte</h2>
+                <form class="security-form">
+                    <div class="form-group">
+                        <label>Mot de passe actuel</label>
+                        <input type="password" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Nouveau mot de passe</label>
+                        <input type="password" required>
+                        <small class="password-strength"></small>
+                    </div>
+                    <div class="form-group">
+                        <label>Confirmer le mot de passe</label>
+                        <input type="password" required>
+                    </div>
+                    <div class="form-group">
+                        <div class="password-requirements">
+                            <p>Le mot de passe doit contenir :</p>
+                            <ul>
+                                <li class="req-upper">Au moins une majuscule</li>
+                                <li class="req-number">Au moins un chiffre</li>
+                                <li class="req-special">Au moins un caractère spécial</li>
+                                <li class="req-length">Minimum 8 caractères</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <button type="submit" class="submit-btn">Changer le mot de passe</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2024 CyberShield - Votre protection contre le phishing</p>
+        <div class="social-icons">
+            <a href="#">Twitter</a>
+            <a href="#">LinkedIn</a>
+            <a href="#">Facebook</a>
+        </div>
+    </footer>
+
+    <script>
+        // Gestion de la force du mot de passe
+        document.querySelectorAll('input[type="password"]').forEach(input => {
+            input.addEventListener('input', function() {
+                const password = this.value;
+                const strengthIndicator = this.parentElement.querySelector('.password-strength');
+                
+                if(password.length > 0) {
+                    let strength = 0;
+                    if(/[A-Z]/.test(password)) strength++;
+                    if(/[0-9]/.test(password)) strength++;
+                    if(/[\W_]/.test(password)) strength++;
+                    if(password.length >= 8) strength++;
+                    
+                    const strengthText = ['Très faible', 'Faible', 'Moyen', 'Fort', 'Très fort'][strength];
+                    strengthIndicator.textContent = `Sécurité : ${strengthText}`;
+                    strengthIndicator.className = `password-strength strength-${strength}`;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
