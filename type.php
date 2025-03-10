@@ -1,27 +1,4 @@
-<!DOCTYPE html>
-<html lang="fr">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phishing par Email - CyberShield</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="assets/style.css">
-</head>
-
-<body>
-    <header>
-        <nav>
-            <div class="logo">CyberShield</div>
-            <ul>
-                <li><a href="#accueil">Accueil</a></li>
-                <li><a href="types.html">Types</a></li>
-                <li><a href="#about">À propos</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
-        </nav>
-    </header>
+<?php include 'includes/header.php'; ?>
     <section class="type-detail-hero">
         <div class="type-detail-container">
             <div class="type-header">
@@ -165,16 +142,6 @@
             </div>
         </div>
     </section>
-
-    <!-- Footer reste le même -->
-    <footer>
-        <p>&copy; 2024 CyberShield - Votre protection contre le phishing</p>
-        <div class="social-icons">
-            <a href="#">Twitter</a>
-            <a href="#">LinkedIn</a>
-            <a href="#">Facebook</a>
-        </div>
-    </footer>
     <script>
         // JavaScript pour la gestion des commentaires
         document.querySelectorAll('.reply-btn').forEach(button => {
@@ -203,6 +170,4 @@
             });
         });
     </script>
-</body>
-
-</html>
+<?php include 'includes/footer.php'; ?>

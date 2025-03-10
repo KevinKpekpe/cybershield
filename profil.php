@@ -1,27 +1,4 @@
-<!DOCTYPE html>
-<html lang="fr">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profil Utilisateur - CyberShield</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/style.css">
-</head>
-
-<body>
-    <header>
-        <nav>
-            <div class="logo">CyberShield</div>
-            <ul>
-                <li><a href="index.html">Accueil</a></li>
-                <li><a href="types.html">Types</a></li>
-                <li><a href="#about">À propos</a></li>
-                <li><a href="#contact">Contact</a></li>
-                <li><a href="profil.html" class="active">Profil</a></li>
-            </ul>
-        </nav>
-    </header>
+<?php include 'includes/header.php'; ?>
 
     <section class="hero" style="min-height: 300px;">
         <div class="hero-content">
@@ -91,36 +68,4 @@
             </div>
         </div>
     </section>
-
-    <footer>
-        <p>&copy; 2024 CyberShield - Votre protection contre le phishing</p>
-        <div class="social-icons">
-            <a href="#">Twitter</a>
-            <a href="#">LinkedIn</a>
-            <a href="#">Facebook</a>
-        </div>
-    </footer>
-
-    <script>
-        // Gestion de la force du mot de passe
-        document.querySelectorAll('input[type="password"]').forEach(input => {
-            input.addEventListener('input', function() {
-                const password = this.value;
-                const strengthIndicator = this.parentElement.querySelector('.password-strength');
-                
-                if(password.length > 0) {
-                    let strength = 0;
-                    if(/[A-Z]/.test(password)) strength++;
-                    if(/[0-9]/.test(password)) strength++;
-                    if(/[\W_]/.test(password)) strength++;
-                    if(password.length >= 8) strength++;
-                    
-                    const strengthText = ['Très faible', 'Faible', 'Moyen', 'Fort', 'Très fort'][strength];
-                    strengthIndicator.textContent = `Sécurité : ${strengthText}`;
-                    strengthIndicator.className = `password-strength strength-${strength}`;
-                }
-            });
-        });
-    </script>
-</body>
-</html>
+<?php include 'includes/footer.php'; ?>
