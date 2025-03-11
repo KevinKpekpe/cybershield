@@ -1,4 +1,5 @@
-<?php include 'includes/header.php'; ?>
+<?php include 'includes/header.php'; 
+?>
 
     <section class="hero">
         <div class="hero-content">

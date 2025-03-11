@@ -149,7 +149,7 @@
             </div>
         </main>
     </div>
-
+    <script src="main.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Gestion des onglets

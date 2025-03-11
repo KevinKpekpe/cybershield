@@ -1,3 +1,18 @@
+<?php include 
+session_start();
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
+    header('Location: ../index.php');
+    exit;
+}
+include '../config/db.php';
+try {
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE id = :id");
+    $stmt->execute(['id' => $_SESSION['user_id']]);
+    $user = $stmt->fetch();
+} catch (PDOException $e) {
+    die("Erreur lors de la récupération des données : " . $e->getMessage());
+}
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -98,17 +113,17 @@
                 
                 <div class="header-right">
                     <div class="admin-profile">
-                        <img src="https://ui-avatars.com/api/?name=John+Doe" alt="Admin" class="admin-avatar">
+                        <img src="../uploads/avatar/<?php echo $user['profile_picture']; ?>" alt="Admin" class="admin-avatar">
                         <div class="admin-info">
-                            <span class="admin-name">John Doe</span>
-                            <span class="admin-role">Administrateur</span>
+                            <span class="admin-name"><?php echo $user['first_name'] . ' ' . $user['last_name']; ?></span>
+                            <span class="admin-role"><?php echo $user['role']; ?></span>
                         </div>
                         <div class="profile-dropdown">
                             <ul>
                                 <li><a href="profil.php"><i class="fas fa-user"></i> Mon Profil</a></li>
                                 <li><a href="settings.php"><i class="fas fa-cog"></i> Paramètres</a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a href="#logout" class="logout"><i class="fas fa-sign-out-alt"></i> Déconnexion</a></li>
+                                <li><a href="../logout.php" class="logout"><i class="fas fa-sign-out-alt"></i> Déconnexion</a></li>
                             </ul>
                         </div>
                     </div>
