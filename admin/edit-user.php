@@ -2,8 +2,41 @@
 include 'header.php';
 
 $errors = [];
-$last_name = $first_name = $birth_date = $nationality = $identity_number = $email = $password = $password_confirm = $role = $gender = '';
-$active = 1;
+$user_id = $_GET['id'] ?? null;
+
+if (!$user_id) {
+    echo '<script>
+        document.addEventListener("DOMContentLoaded", function() {
+            createAlert("error", "Erreur", "ID utilisateur manquant.");
+        });
+    </script>';
+    exit;
+}
+
+
+$stmt = $pdo->prepare("SELECT * FROM users WHERE id = :id");
+$stmt->execute(['id' => $user_id]);
+$user = $stmt->fetch();
+
+if (!$user) {
+    echo '<script>
+        document.addEventListener("DOMContentLoaded", function() {
+            createAlert("error", "Erreur", "Utilisateur non trouvé.");
+        });
+    </script>';
+    exit;
+}
+
+$last_name = $user['last_name'];
+$first_name = $user['first_name'];
+$birth_date = $user['birth_date'];
+$nationality = $user['nationality'];
+$identity_number = $user['identity_number'];
+$email = $user['email'];
+$role = $user['role'];
+$active = $user['active'];
+$gender = $user['gender'];
+$profile_picture = $user['profile_picture'];
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $last_name         = trim($_POST['last_name'] ?? '');
@@ -32,9 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors[] = "L'email est invalide.";
     }
-    if (empty($password)) {
-        $errors[] = "Le mot de passe est requis.";
-    } elseif (!preg_match('/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/', $password)) {
+    if (!empty($password) && !preg_match('/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/', $password)) {
         $errors[] = "Le mot de passe doit contenir au moins 8 caractères, une majuscule, un chiffre et un caractère spécial.";
     }
     if ($password !== $password_confirm) {
@@ -44,21 +75,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $errors[] = "Le sexe est requis.";
     }
 
-    $stmt = $pdo->prepare("SELECT id FROM users WHERE email = :email");
-    $stmt->execute(['email' => $email]);
+    $stmt = $pdo->prepare("SELECT id FROM users WHERE email = :email AND id != :id");
+    $stmt->execute(['email' => $email, 'id' => $user_id]);
     if ($stmt->fetch()) {
         $errors[] = "Cet email est déjà utilisé.";
     }
 
     if (!empty($identity_number)) {
-        $stmt = $pdo->prepare("SELECT id FROM users WHERE identity_number = :identity_number");
-        $stmt->execute(['identity_number' => $identity_number]);
+        $stmt = $pdo->prepare("SELECT id FROM users WHERE identity_number = :identity_number AND id != :id");
+        $stmt->execute(['identity_number' => $identity_number, 'id' => $user_id]);
         if ($stmt->fetch()) {
             $errors[] = "Ce numéro d'identité est déjà utilisé.";
         }
     }
 
-    $file_name = null;
+    $file_name = $profile_picture;
     if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] == 0) {
         $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
         if (!in_array($_FILES['profile_picture']['type'], $allowed_types)) {
@@ -78,11 +109,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (empty($errors)) {
         try {
             $pdo->beginTransaction();
-            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+            $hashed_password = !empty($password) ? password_hash($password, PASSWORD_DEFAULT) : $user['password'];
 
-            $stmt = $pdo->prepare("INSERT INTO users 
-                (last_name, first_name, birth_date, nationality, identity_number, email, password, profile_picture, role, active, gender, created_at)
-                VALUES (:last_name, :first_name, :birth_date, :nationality, :identity_number, :email, :password, :profile_picture, :role, :active, :gender, NOW())");
+            $stmt = $pdo->prepare("UPDATE users SET 
+                last_name = :last_name, 
+                first_name = :first_name, 
+                birth_date = :birth_date, 
+                nationality = :nationality, 
+                identity_number = :identity_number, 
+                email = :email, 
+                password = :password, 
+                profile_picture = :profile_picture, 
+                role = :role, 
+                active = :active, 
+                gender = :gender 
+                WHERE id = :id");
             $stmt->execute([
                 'last_name'       => $last_name,
                 'first_name'      => $first_name,
@@ -94,20 +135,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 'profile_picture' => $file_name,
                 'role'            => $role,
                 'active'          => $active,
-                'gender'          => $gender
+                'gender'          => $gender,
+                'id'              => $user_id
             ]);
-
-            $newUserId = $pdo->lastInsertId();
 
             $admin_id = $_SESSION['user_id'] ?? null;
             $ip_address = $_SERVER['REMOTE_ADDR'] ?? 'Unknown';
-            $descriptionLog = "Création de l'utilisateur : " . $email;
+            $descriptionLog = "Modification de l'utilisateur : " . $email;
             $stmtLog = $pdo->prepare("INSERT INTO logs 
                 (user_id, action_type, table_name, record_id, description, ip_address) 
-                VALUES (:user_id, 'CREATE', 'users', :record_id, :description, :ip_address)");
+                VALUES (:user_id, 'UPDATE', 'users', :record_id, :description, :ip_address)");
             $stmtLog->execute([
                 'user_id'   => $admin_id,
-                'record_id' => $newUserId,
+                'record_id' => $user_id,
                 'description' => $descriptionLog,
                 'ip_address'  => $ip_address
             ]);
@@ -116,14 +156,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             echo '<script>
                 document.addEventListener("DOMContentLoaded", function() {
-                    createAlert("success", "Succès", "Utilisateur créé avec succès !");
+                    createAlert("success", "Succès", "Utilisateur mis à jour avec succès !");
                 });
             </script>';
         } catch (PDOException $e) {
             $pdo->rollBack();
             echo '<script>
                 document.addEventListener("DOMContentLoaded", function() {
-                    createAlert("error", "Erreur", "Erreur lors de la création de l\'utilisateur : ' . addslashes($e->getMessage()) . '");
+                    createAlert("error", "Erreur", "Erreur lors de la mise à jour de l\'utilisateur : ' . addslashes($e->getMessage()) . '");
                 });
             </script>';
         }
@@ -140,8 +180,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 ?>
 <div class="dashboard-content">
     <div class="page-header">
-        <h1>Ajouter un utilisateur</h1>
-        <p>Créer un nouveau compte utilisateur</p>
+        <h1>Modifier un utilisateur</h1>
+        <p>Mettre à jour les informations de l'utilisateur</p>
     </div>
     <div class="alert-container"></div>
     <div class="form-container">
@@ -151,10 +191,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <label class="form-label">Photo de profil</label>
                 <div class="profile-upload" id="profileUpload">
                     <div class="profile-preview" id="profilePreview">
-                        <i class="fas fa-user"></i>
+                        <?php if ($profile_picture): ?>
+                            <img src="../uploads/avatar/<?= htmlspecialchars($profile_picture) ?>" alt="Profile Picture">
+                        <?php else: ?>
+                            <i class="fas fa-user"></i>
+                        <?php endif; ?>
                     </div>
                     <div class="upload-text">
-                        <h4>Télécharger une photo</h4>
+                        <h4>Télécharger une nouvelle photo</h4>
                         <p>JPG, PNG ou GIF, taille maximale 2MB</p>
                     </div>
                     <input type="file" id="profileInput" name="profile_picture" hidden accept="image/*">
@@ -195,12 +239,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 <div class="form-group">
                     <label class="form-label">Mot de passe</label>
-                    <input type="password" class="form-input" name="password" value="<?= htmlspecialchars($password) ?>" required>
+                    <input type="password" class="form-input" name="password">
+                    <small>Laissez vide pour conserver le mot de passe actuel</small>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Confirmer le mot de passe</label>
-                    <input type="password" class="form-input" name="password_confirm" value="<?= htmlspecialchars($password_confirm) ?>" required>
+                    <input type="password" class="form-input" name="password_confirm">
                 </div>
 
                 <div class="form-group">
@@ -241,8 +286,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <div class="form-actions">
                 <button type="button" class="cancel-btn">Annuler</button>
                 <button type="submit" class="submit-btn">
-                    <i class="fas fa-user-plus"></i>
-                    Créer l'utilisateur
+                    <i class="fas fa-user-edit"></i>
+                    Mettre à jour l'utilisateur
                 </button>
             </div>
         </form>

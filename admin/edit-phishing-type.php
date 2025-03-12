@@ -4,15 +4,57 @@ include 'header.php';
 
 $errors = [];
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+// Si la requête est en GET, on récupère l'id et on charge les données existantes
+if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+    if (!isset($_GET['id']) || empty($_GET['id'])) {
+        exit("Identifiant manquant.");
+    }
+    $id = $_GET['id'];
+
+    // Récupérer le type de phishing
+    $stmt = $pdo->prepare("SELECT * FROM phishing_types WHERE id = ?");
+    $stmt->execute([$id]);
+    $phishingType = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$phishingType) {
+        exit("Type de phishing non trouvé.");
+    }
+    $title = $phishingType['title'];
+    $description = $phishingType['description'];
+    $active = $phishingType['active'];
+    $imagePath = $phishingType['image'];
+
+    // Récupérer les caractéristiques
+    $stmt = $pdo->prepare("SELECT content FROM characteristics WHERE phishing_type_id = ? AND active = 1");
+    $stmt->execute([$id]);
+    $characteristics = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+    // Récupérer les protections
+    $stmt = $pdo->prepare("SELECT content FROM protections WHERE phishing_type_id = ? AND active = 1");
+    $stmt->execute([$id]);
+    $protections = $stmt->fetchAll(PDO::FETCH_COLUMN);
+} else {
+    // POST : traitement du formulaire d'édition
+    $id = $_POST['id'] ?? null;
+    if (!$id) {
+        exit("Identifiant manquant.");
+    }
+    // Charger l'enregistrement actuel pour récupérer l'ancienne image le cas échéant
+    $stmt = $pdo->prepare("SELECT * FROM phishing_types WHERE id = ?");
+    $stmt->execute([$id]);
+    $phishingType = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$phishingType) {
+        exit("Type de phishing non trouvé.");
+    }
+    $oldImagePath = $phishingType['image'];
+
     $title = trim($_POST['title'] ?? '');
     $description = trim($_POST['description'] ?? '');
     $active = isset($_POST['active']) ? 1 : 0;
     $characteristics = $_POST['characteristics'] ?? [];
     $protections = $_POST['protections'] ?? [];
-    $imagePath = NULL;
+    $newImagePath = null;
 
-    // 1. **Validation des entrées**
+    // Validation des champs
     if (empty($title)) {
         $errors[] = "Le titre est obligatoire.";
     }
@@ -26,6 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $errors[] = "Au moins une protection est requise.";
     }
 
+    // Gestion de l'image (modification facultative)
     if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
         $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         $uploadDir = '../uploads/type/';
@@ -35,93 +78,86 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (!in_array($fileType, $allowedTypes)) {
             $errors[] = "Le format de l'image doit être JPG, PNG, GIF ou WEBP.";
         }
-
-        if ($fileSize > 2 * 1024 * 1024) { // Limite à 2 Mo
+        if ($fileSize > 2 * 1024 * 1024) { // 2 Mo
             $errors[] = "L'image ne doit pas dépasser 2 Mo.";
         }
-
         if (empty($errors)) {
             $fileName = uniqid() . '_' . basename($_FILES['image']['name']);
             $targetPath = $uploadDir . $fileName;
-
             if (move_uploaded_file($_FILES['image']['tmp_name'], $targetPath)) {
-                $imagePath = $fileName;
+                $newImagePath = $fileName;
             } else {
                 $errors[] = "Erreur lors du téléchargement de l'image.";
             }
         }
     }
+
     if (empty($errors)) {
         try {
             $pdo->beginTransaction();
-            
-            // Insertion dans la table phishing_types
-            $sql = "INSERT INTO phishing_types (title, description, image, active, created_at) VALUES (?, ?, ?, ?, NOW())";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$title, $description, $imagePath, $active]);
-            $phishingTypeId = $pdo->lastInsertId();
-            
-            // Insertion des caractéristiques
-            $sql = "INSERT INTO characteristics (phishing_type_id, content, active) VALUES (?, ?, 1)";
-            $stmt = $pdo->prepare($sql);
+
+            if ($newImagePath !== null) {
+                $sql = "UPDATE phishing_types SET title = ?, description = ?, image = ?, active = ? WHERE id = ?";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([$title, $description, $newImagePath, $active, $id]);
+            } else {
+                $sql = "UPDATE phishing_types SET title = ?, description = ?, active = ? WHERE id = ?";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([$title, $description, $active, $id]);
+            }
+
+            $stmt = $pdo->prepare("DELETE FROM characteristics WHERE phishing_type_id = ?");
+            $stmt->execute([$id]);
+            $stmt = $pdo->prepare("DELETE FROM protections WHERE phishing_type_id = ?");
+            $stmt->execute([$id]);
+
+            $stmt = $pdo->prepare("INSERT INTO characteristics (phishing_type_id, content, active) VALUES (?, ?, 1)");
             foreach ($characteristics as $char) {
                 $char = trim($char);
                 if (!empty($char)) {
-                    $stmt->execute([$phishingTypeId, $char]);
+                    $stmt->execute([$id, $char]);
                 }
             }
-            
-            // Insertion des protections
-            $sql = "INSERT INTO protections (phishing_type_id, content, active) VALUES (?, ?, 1)";
-            $stmt = $pdo->prepare($sql);
+
+            $stmt = $pdo->prepare("INSERT INTO protections (phishing_type_id, content, active) VALUES (?, ?, 1)");
             foreach ($protections as $prot) {
                 $prot = trim($prot);
                 if (!empty($prot)) {
-                    $stmt->execute([$phishingTypeId, $prot]);
+                    $stmt->execute([$id, $prot]);
                 }
             }
-            
-            // Ajout de la log dans la table logs
             $user_id = $_SESSION['user_id'] ?? null;
             $ip_address = $_SERVER['REMOTE_ADDR'] ?? 'Unknown';
-            $descriptionLog = "Création du type de phishing : " . $title;
-            $stmt = $pdo->prepare("INSERT INTO logs (user_id, action_type, table_name, record_id, description, ip_address) VALUES (?, 'CREATE', 'phishing_types', ?, ?, ?)");
-            $stmt->execute([$user_id, $phishingTypeId, $descriptionLog, $ip_address]);
-            
+            $descriptionLog = "Modification du type de phishing : " . $title;
+            $stmt = $pdo->prepare("INSERT INTO logs (user_id, action_type, table_name, record_id, description, ip_address) VALUES (?, 'UPDATE', 'phishing_types', ?, ?, ?)");
+            $stmt->execute([$user_id, $id, $descriptionLog, $ip_address]);
+
             $pdo->commit();
             echo '<script>
-            document.addEventListener("DOMContentLoaded", function() {
-                createAlert("success", "Succès", "Création réussie ! Redirection...");
-            });
+                document.addEventListener("DOMContentLoaded", function() {
+                    createAlert("success", "Succès", "Modification réussie ! Redirection...");
+                });
             </script>';
         } catch (Exception $e) {
             $pdo->rollBack();
             echo '<script>
-            document.addEventListener("DOMContentLoaded", function() {
-                createAlert("error", "Erreur", "Erreur lors de la création : ' . addslashes($e->getMessage()) . '");
-            });
-        </script>';
+                document.addEventListener("DOMContentLoaded", function() {
+                    createAlert("error", "Erreur", "Erreur lors de la modification : ' . addslashes($e->getMessage()) . '");
+                });
+            </script>';
         }
     }
-}
-if (!empty($errors)) {
-    echo '<script>
-        document.addEventListener("DOMContentLoaded", function() {';
-    foreach ($errors as $error) {
-        echo 'createAlert("error", "Erreur", "' . addslashes($error) . '");';
-    }
-    echo '});
-    </script>';
 }
 ?>
 <div class="dashboard-content">
     <div class="page-header">
-        <h1>Ajouter un type de phishing</h1>
-        <p>Créer un nouveau type de phishing avec ses caractéristiques et protections</p>
+        <h1>Modifier un type de phishing</h1>
+        <p>Modifier le type de phishing sélectionné avec ses caractéristiques et protections</p>
     </div>
     <div class="alert-container"></div>
     <div class="form-container">
-        <form id="phishingForm" action="create-type.php" method="POST" enctype="multipart/form-data">
+        <form id="phishingForm" action="edit-phishing-type.php" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="id" value="<?= htmlspecialchars($id) ?>">
             <!-- Section principale -->
             <div class="form-section">
                 <div class="form-grid">
@@ -140,27 +176,24 @@ if (!empty($errors)) {
                             <span>Actif</span>
                         </div>
                     </div>
-
                     <!-- Description sur toute la largeur -->
                     <div class="form-group form-grid-3">
                         <label class="form-label">Description</label>
                         <textarea class="form-input" name="description"><?= htmlspecialchars($description ?? '') ?></textarea>
                     </div>
-
                     <!-- Image -->
                     <div class="form-group form-grid-3">
                         <label class="form-label">Image</label>
                         <div class="image-upload">
                             <input type="file" id="imageInput" name="image" hidden accept="image/*">
                             <i class="fas fa-cloud-upload-alt"></i>
-                            <p class="image-upload-text">Cliquez ou glissez une image ici</p>
-                            <img id="imagePreview" style="display: <?= isset($imagePath) ? 'block' : 'none' ?>; max-width: 100%; margin-top: 10px;"
-                                src="<?= isset($imagePath) ? '../uploads/type/' . htmlspecialchars($imagePath) : '' ?>">
+                            <p class="image-upload-text"><?= isset($imagePath) && !empty($imagePath) ? 'Modifier l\'image' : 'Cliquez ou glissez une image ici' ?></p>
+                            <img id="imagePreview" style="display: <?= isset($imagePath) && !empty($imagePath) ? 'block' : 'none' ?>; max-width: 100%; margin-top: 10px;"
+                                src="<?= isset($imagePath) && !empty($imagePath) ? '../uploads/type/' . htmlspecialchars($imagePath) : '' ?>">
                         </div>
                     </div>
                 </div>
             </div>
-
             <!-- Section Caractéristiques et Protections -->
             <div class="form-section">
                 <div class="dynamic-fields-container">
@@ -191,7 +224,6 @@ if (!empty($errors)) {
                             Ajouter une caractéristique
                         </button>
                     </div>
-
                     <!-- Protections -->
                     <div class="dynamic-section">
                         <h3 class="form-label">Protections</h3>
@@ -221,7 +253,6 @@ if (!empty($errors)) {
                     </div>
                 </div>
             </div>
-
             <!-- Boutons d'action -->
             <div class="form-actions">
                 <button type="submit" class="submit-btn">
@@ -234,101 +265,89 @@ if (!empty($errors)) {
                 </button>
             </div>
         </form>
-
     </div>
 </div>
 </main>
 </div>
 <script src="main.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const imageUpload = document.querySelector('.image-upload');
-        const imageInput = document.getElementById('imageInput');
-        const imagePreview = document.getElementById('imagePreview');
-        const uploadText = document.querySelector('.image-upload-text');
-        const uploadIcon = document.querySelector('.image-upload i');
+document.addEventListener('DOMContentLoaded', function() {
+    const imageUpload = document.querySelector('.image-upload');
+    const imageInput = document.getElementById('imageInput');
+    const imagePreview = document.getElementById('imagePreview');
+    const uploadText = document.querySelector('.image-upload-text');
+    const uploadIcon = document.querySelector('.image-upload i');
 
-        // Fonction pour afficher l'aperçu de l'image
-        function displayImagePreview(file) {
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    imagePreview.src = e.target.result;
-                    imagePreview.style.display = 'block';
-                    uploadText.style.display = 'none';
-                    uploadIcon.style.display = 'none';
-                }
-                reader.readAsDataURL(file);
+    // Afficher l'aperçu de l'image sélectionnée
+    function displayImagePreview(file) {
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+                imagePreview.style.display = 'block';
+                uploadText.style.display = 'none';
+                uploadIcon.style.display = 'none';
             }
+            reader.readAsDataURL(file);
         }
+    }
 
-        // Gestion du clic sur la zone d'upload
-        imageUpload.addEventListener('click', () => imageInput.click());
+    imageUpload.addEventListener('click', () => imageInput.click());
+    imageInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        displayImagePreview(file);
+    });
 
-        // Gestion du changement de fichier via l'input
-        imageInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
+    imageUpload.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        imageUpload.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--primary');
+    });
+
+    imageUpload.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        imageUpload.style.borderColor = '#e5e7eb';
+    });
+
+    imageUpload.addEventListener('drop', (e) => {
+        e.preventDefault();
+        imageUpload.style.borderColor = '#e5e7eb';
+        const file = e.dataTransfer.files[0];
+        if (file) {
+            imageInput.files = e.dataTransfer.files;
             displayImagePreview(file);
-        });
-
-        // Gestion du drag & drop
-        imageUpload.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            imageUpload.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--primary');
-        });
-
-        imageUpload.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            imageUpload.style.borderColor = '#e5e7eb';
-        });
-
-        imageUpload.addEventListener('drop', (e) => {
-            e.preventDefault();
-            imageUpload.style.borderColor = '#e5e7eb';
-            const file = e.dataTransfer.files[0];
-            if (file) {
-                imageInput.files = e.dataTransfer.files;
-                displayImagePreview(file);
-            }
-        });
-
-        // Fonction pour ajouter un champ dynamique
-        function addDynamicField(containerId, placeholder) {
-            const container = document.getElementById(containerId);
-            const field = document.createElement('div');
-            field.className = 'dynamic-field';
-            field.innerHTML = `
-                    <input type="text" class="form-input" name="${containerId === 'characteristicsContainer' ? 'characteristics[]' : 'protections[]'}" 
-                        placeholder="${placeholder}">
-                    <button type="button" class="remove-field">
-                        <i class="fas fa-times"></i>
-                    </button>
-                `;
-            container.appendChild(field);
-
-            // Ajouter l'événement de suppression
-            field.querySelector('.remove-field').addEventListener('click', () => {
-                field.remove();
-            });
         }
+    });
 
-        // Événements pour ajouter des champs
-        document.getElementById('addCharacteristic').addEventListener('click', () => {
-            addDynamicField('characteristicsContainer', 'Ajouter une caractéristique');
+    // Fonction pour ajouter un champ dynamique
+    function addDynamicField(containerId, placeholder) {
+        const container = document.getElementById(containerId);
+        const field = document.createElement('div');
+        field.className = 'dynamic-field';
+        field.innerHTML = `
+            <input type="text" class="form-input" name="${containerId === 'characteristicsContainer' ? 'characteristics[]' : 'protections[]'}" placeholder="${placeholder}">
+            <button type="button" class="remove-field">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        container.appendChild(field);
+        field.querySelector('.remove-field').addEventListener('click', () => {
+            field.remove();
         });
+    }
 
-        document.getElementById('addProtection').addEventListener('click', () => {
-            addDynamicField('protectionsContainer', 'Ajouter une protection');
-        });
+    document.getElementById('addCharacteristic').addEventListener('click', () => {
+        addDynamicField('characteristicsContainer', 'Ajouter une caractéristique');
+    });
+    document.getElementById('addProtection').addEventListener('click', () => {
+        addDynamicField('protectionsContainer', 'Ajouter une protection');
+    });
 
-        // Gestion des suppressions initiales
-        document.querySelectorAll('.remove-field').forEach(button => {
-            button.addEventListener('click', () => {
-                button.closest('.dynamic-field').remove();
-            });
+    document.querySelectorAll('.remove-field').forEach(button => {
+        button.addEventListener('click', () => {
+            button.closest('.dynamic-field').remove();
         });
     });
+});
 </script>
 </body>
-
 </html>

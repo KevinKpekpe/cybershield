@@ -29,8 +29,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (empty($password)) {
         $errors[] = "Le mot de passe est requis.";
     }
-
-    // Si pas d'erreurs, tentative de connexion
     if (empty($errors)) {
         try {
             $stmt = $pdo->prepare("SELECT id, email, password, first_name, last_name, profile_picture, role, active FROM users WHERE email = :email");
@@ -49,8 +47,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $_SESSION['user_profile_pic'] = $user['profile_picture'];
                     $_SESSION['user_role'] = $user['role'];
 
+                    // Mettre à jour le champ last_login avec la date et l'heure actuelles
+                    $updateStmt = $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = :id");
+                    $updateStmt->execute(['id' => $user['id']]);
+
                     $success = true;
                     
+                    // Insertion dans la table logs pour enregistrer la connexion
+                    $ip_address = $_SERVER['REMOTE_ADDR'] ?? 'Unknown';
+                    $descriptionLog = "Connexion de l'utilisateur : " . $user['email'];
+                    $logStmt = $pdo->prepare("INSERT INTO logs (user_id, action_type, table_name, record_id, description, ip_address) VALUES (?, 'LOGIN', 'users', ?, ?, ?)");
+                    $logStmt->execute([$user['id'], $user['id'], $descriptionLog, $ip_address]);
+
                     // Redirection en fonction du rôle
                     if ($user['role'] === 'admin') {
                         header('Location: admin/profil.php');
@@ -91,14 +99,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <form id="loginForm" method="POST" action="">
                 <div class="form-group">
                     <label for="email">Email</label>
-                    <input type="email" id="email" name="email"  placeholder="votre@email.com" 
+                    <input type="email" id="email" name="email" placeholder="votre@email.com" 
                         value="<?php echo htmlspecialchars($email ?? ''); ?>">
                 </div>
                 
                 <div class="form-group">
                     <label for="password">Mot de passe</label>
                     <div class="password-group">
-                        <input type="password" id="password" name="password"  placeholder="••••••••">
+                        <input type="password" id="password" name="password" placeholder="••••••••">
                         <span class="password-toggle">👁️</span>
                     </div>
                 </div>
@@ -131,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <div class="alert-title">${title}</div>
                     <div class="alert-message">${message}</div>
                 </div>
-                <button class="alert-close">&times;</button>
+                <button class="alert-close">×</button>
             `;
             
             alertContainer.appendChild(alert);

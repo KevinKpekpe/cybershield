@@ -1,7 +1,7 @@
 <?php include 
 session_start();
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
-    header('Location: ../index.php');
+    header('Location: ../login.php');
     exit;
 }
 include '../config/db.php';

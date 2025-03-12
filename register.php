@@ -88,6 +88,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 'profile_picture' => $file_name
             ]);
 
+            // Récupération de l'ID du nouvel utilisateur
+            $newUserId = $pdo->lastInsertId();
+
+            // Insertion dans la table logs
+            $ip_address = $_SERVER['REMOTE_ADDR'] ?? 'Unknown';
+            $descriptionLog = "Inscription de l'utilisateur : " . $email;
+            $logStmt = $pdo->prepare("INSERT INTO logs (user_id, action_type, table_name, record_id, description, ip_address) VALUES (?, 'CREATE', 'users', ?, ?, ?)");
+            $logStmt->execute([$newUserId, $newUserId, $descriptionLog, $ip_address]);
+
             echo '<script>
                 document.addEventListener("DOMContentLoaded", function() {
                     createAlert("success", "Succès", "Inscription réussie ! Redirection...");
@@ -148,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                     <div class="form-group">
                         <label for="birth_date">Date de naissance</label>
-                        <input type="date" id="birth_date" name="birth_date" >
+                        <input type="date" id="birth_date" name="birth_date">
                     </div>
 
                     <div class="form-group">
@@ -187,7 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <label>Sexe</label>
                     <div class="gender-options">
                         <label class="gender-option">
-                            <input type="radio" name="gender" value="male" >
+                            <input type="radio" name="gender" value="male">
                             <span>Homme</span>
                         </label>
                         <label class="gender-option">
