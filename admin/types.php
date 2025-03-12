@@ -48,10 +48,10 @@ try {
         <p>Gestion des différents types de phishing</p>
     </div>
 
-    <div class="table-header">
+    <div class="table-header" onclick="window.location.href='create-type.php'">
         <button class="add-button">
             <i class="fas fa-plus"></i>
-            <a href="add-phishing-type.php">Ajouter un type</a>
+            Ajouter un type
         </button>
     </div>
 
@@ -118,3 +118,4 @@ try {
         </div>
     </div>
 </div>
+<script src="main.js"></script>

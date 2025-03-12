@@ -1,4 +1,10 @@
 <?php include 'includes/header.php'; 
+
+$stmt = $pdo->prepare("SELECT * FROM phishing_types ORDER BY id DESC LIMIT 4");
+$stmt->execute();
+$phishingTypes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
 ?>
 
     <section class="hero">
@@ -30,30 +36,14 @@
     <section class="types">
         <h2 class="section-title">Types de Phishing</h2>
         <div class="types-grid">
+            <?php foreach ($phishingTypes as $type) : ?>
             <div class="type-card">
-                <img src="https://images.unsplash.com/photo-1563986768609-322da13575f3" alt="Email Phishing">
-                <h3>Phishing par Email</h3>
-                <p>Détectez les emails frauduleux qui imitent des entreprises légitimes pour voler vos données.</p>
-                <button class="learn-more">Voir plus</button>
+                <img src="uploads/type/<?= htmlspecialchars($type['image']) ?>" alt="<?= htmlspecialchars($type['title']) ?>">
+                <h3><?= htmlspecialchars($type['title']) ?></h3>
+                <p><?= htmlspecialchars(substr($type['description'], 0, 200)) ?>...</p>
+                <button onclick="window.location.href='type.php?id=<?= $type['id'] ?>'" class="learn-more">Voir plus</button>
             </div>
-            <div class="type-card">
-                <img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9" alt="Smishing">
-                <h3>Smishing</h3>
-                <p>Protégez-vous contre les SMS malveillants qui ciblent vos informations personnelles.</p>
-                <button class="learn-more">Voir plus</button>
-            </div>
-            <div class="type-card">
-                <img src="https://images.unsplash.com/photo-1563986768494-4dee2763ff3f" alt="Spear Phishing">
-                <h3>Spear Phishing</h3>
-                <p>Identifiez les attaques personnalisées utilisant vos informations personnelles.</p>
-                <button class="learn-more">Voir plus</button>
-            </div>
-            <div class="type-card">
-                <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa" alt="Whaling">
-                <h3>Whaling</h3>
-                <p>Sécurisez vos cadres dirigeants contre les attaques ciblées sophistiquées.</p>
-                <button class="learn-more">Voir plus</button>
-            </div>
+            <?php endforeach; ?>
         </div>
     </section>
 

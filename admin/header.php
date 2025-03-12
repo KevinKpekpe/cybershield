@@ -41,7 +41,7 @@ try {
                     <span class="nav-section-title">MENU PRINCIPAL</span>
                     <ul>
                         <li class="active">
-                            <a href="#dashboard">
+                            <a href="/admin/index.php">
                                 <i class="fas fa-home"></i>
                                 <span>Dashboard</span>
                             </a>
@@ -67,18 +67,6 @@ try {
                                 <li><a href="types.php">Tous les types</a></li>
                                 <li><a href="create-type.php">Ajouter un type</a></li>
                             </ul>
-                        </li>
-                        <li>
-                            <a href="#analytics">
-                                <i class="fas fa-chart-line"></i>
-                                <span>Analytiques</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#settings">
-                                <i class="fas fa-cog"></i>
-                                <span>Paramètres</span>
-                            </a>
                         </li>
                     </ul>
                 </div>

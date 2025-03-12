@@ -1,31 +1,4 @@
-<?php include 'header.php'; ?>
-        <!-- Main Content -->
-        <main class="main-content">
-            <header class="top-header">
-                <div class="search-bar">
-                    <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Rechercher...">
-                </div>
-                
-                <div class="header-right">
-                    <div class="admin-profile">
-                        <img src="https://ui-avatars.com/api/?name=John+Doe" alt="Admin" class="admin-avatar">
-                        <div class="admin-info">
-                            <span class="admin-name">John Doe</span>
-                            <span class="admin-role">Administrateur</span>
-                        </div>
-                        <div class="profile-dropdown">
-                            <ul>
-                                <li><a href="#profile"><i class="fas fa-user"></i> Mon Profil</a></li>
-                                <li><a href="#settings"><i class="fas fa-cog"></i> Paramètres</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a href="#logout" class="logout"><i class="fas fa-sign-out-alt"></i> Déconnexion</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </header>
-            
+<?php include 'header.php'; ?>            
             <div class="dashboard-content">
                 <div class="page-header">
                     <h1>Paramètres</h1>
