@@ -63,6 +63,7 @@ try {
             </div>
         </div>
 
+        <div class="alert-container"></div>
         <table class="phishing-table">
             <thead>
                 <tr>
@@ -92,9 +93,15 @@ try {
                             <a href="edit-phishing-type.php?id=<?= $phishingType['id'] ?>" class="action-button edit-btn" title="Modifier">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <a href="delete-phishing-type.php?id=<?= $phishingType['id'] ?>" class="action-button delete-btn" title="Supprimer" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce type de phishing ?')">
-                                <i class="fas fa-trash"></i>
-                            </a>
+                            <?php if ($phishingType['active'] == 1) : ?>
+                                <a href="deactivate-type.php?id=<?= $phishingType['id'] ?>" class="action-button delete-btn" title="Désactiver" onclick="return confirm('Êtes-vous sûr de vouloir désactiver ce type de phishing ?')">
+                                    <i class="fas fa-ban"></i>
+                                </a>
+                            <?php else : ?>
+                                <a href="activate-type.php?id=<?= $phishingType['id'] ?>" class="action-button activate-btn" title="Activer" onclick="return confirm('Êtes-vous sûr de vouloir activer ce type de phishing ?')">
+                                    <i class="fas fa-check"></i>
+                                </a>
+                            <?php endif; ?>
                         </div>
                     </td>
                 </tr>

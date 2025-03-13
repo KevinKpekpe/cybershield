@@ -87,7 +87,6 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </select>
                     <button type="submit" class="add-button">Appliquer</button>
                 </div>
-                
             </div>
         </form>
 
@@ -132,9 +131,15 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <a href="edit-user.php?id=<?php echo $user['id']; ?>" class="action-button edit-btn" title="Modifier">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <a href="delete-user.php?id=<?php echo $user['id']; ?>" class="action-button delete-btn" title="Supprimer" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')">
-                                    <i class="fas fa-trash"></i>
-                                </a>
+                                <?php if ($user['active'] == 1) : ?>
+                                    <a href="deactivate-user.php?id=<?php echo $user['id']; ?>" class="action-button delete-btn" title="Désactiver" onclick="return confirm('Êtes-vous sûr de vouloir désactiver cet utilisateur ?')">
+                                        <i class="fas fa-ban"></i>
+                                    </a>
+                                <?php else : ?>
+                                    <a href="activate-user.php?id=<?php echo $user['id']; ?>" class="action-button activate-btn" title="Activer" onclick="return confirm('Êtes-vous sûr de vouloir activer cet utilisateur ?')">
+                                        <i class="fas fa-check"></i>
+                                    </a>
+                                <?php endif; ?>
                             </div>
                         </td>
                     </tr>

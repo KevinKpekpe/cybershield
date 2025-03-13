@@ -1,6 +1,6 @@
 <?php include 'includes/header.php'; 
 
-$stmt = $pdo->prepare("SELECT * FROM phishing_types ORDER BY id DESC");
+$stmt = $pdo->prepare("SELECT * FROM phishing_types WHERE active=1 ORDER BY id DESC");
 $stmt->execute();
 $phishingTypes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

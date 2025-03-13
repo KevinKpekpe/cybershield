@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         try {
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
             $stmt = $pdo->prepare("INSERT INTO users (last_name, first_name, birth_date, nationality, identity_number, email, gender, password, profile_picture, created_at) 
-                                VALUES (:lastname, :firstname, :birth_date, :nationality, :identity_number, :email, :gender, :password, :profile_picture, NOW())");
+            VALUES (:lastname, :firstname, :birth_date, :nationality, :identity_number, :email, :gender, :password, :profile_picture, NOW())");
             $stmt->execute([
                 'lastname' => $lastname,
                 'firstname' => $firstname,

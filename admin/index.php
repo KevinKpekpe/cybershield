@@ -62,12 +62,12 @@ function getIconForAction($action_type, $table_name) {
             return 'fas fa-sign-in-alt';
         case 'LOGOUT':
             return 'fas fa-sign-out-alt';
-        case 'VIEW':
-            return 'fas fa-eye';
+        case 'ACTIVATE':
+            return 'fas fa-check';
         default:
             return 'fas fa-info-circle';
     }
-}
+} 
 ?>
 <div class="dashboard-content">
     <div class="page-header">
