@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : localhost
--- Généré le : mer. 12 mars 2025 à 00:05
+-- Généré le : ven. 14 mars 2025 à 18:15
 -- Version du serveur : 10.4.32-MariaDB
 -- Version de PHP : 8.2.12
 
@@ -39,11 +39,14 @@ CREATE TABLE `characteristics` (
 --
 
 INSERT INTO `characteristics` (`id`, `phishing_type_id`, `content`, `active`) VALUES
-(1, 1, 'Liens suspects', 1),
-(2, 1, 'Fautes d’orthographe', 1),
-(3, 1, 'Urgence artificielle', 1),
-(4, 2, 'Ton professionnel', 1),
-(5, 2, 'Données personnelles utilisées', 1);
+(1, 1, 'L’email semble provenir d’une entité de confiance (banque, service client, administration).', 1),
+(2, 1, 'Contient un lien menant à un site web frauduleux imitant un site légitime.', 1),
+(3, 1, 'Utilisation d’un ton urgent pour pousser l’utilisateur à agir rapidement (ex: \"Votre compte sera bloqué dans 24h\").', 1),
+(4, 1, 'Peut contenir des pièces jointes malveillantes (ex: faux PDF de facture).', 1),
+(5, 2, 'L’email est personnalisé avec des informations spécifiques sur la cible (nom, entreprise, poste).', 1),
+(6, 2, 'Souvent envoyé depuis une adresse qui semble légitime mais qui est en réalité falsifiée.', 1),
+(7, 3, 'Appels provenant de numéros masqués ou inconnus.', 1),
+(8, 3, 'L’attaquant se fait parfois passer pour un collègue ou un supérieur hiérarchique.', 1);
 
 -- --------------------------------------------------------
 
@@ -65,7 +68,7 @@ CREATE TABLE `comments` (
 --
 
 INSERT INTO `comments` (`id`, `user_id`, `phishing_type_id`, `content`, `active`, `created_at`) VALUES
-(1, 2, 1, 'J’ai reçu un email comme ça hier, merci pour les infos !', 1, '2025-03-07 14:40:46');
+(5, 2, 1, 'je suis un commentaire', 1, '2025-03-12 16:57:44');
 
 -- --------------------------------------------------------
 
@@ -82,13 +85,6 @@ CREATE TABLE `comment_replies` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Déchargement des données de la table `comment_replies`
---
-
-INSERT INTO `comment_replies` (`id`, `user_id`, `comment_id`, `content`, `active`, `created_at`) VALUES
-(1, 1, 1, 'Fais attention aux pièces jointes aussi !', 1, '2025-03-07 14:40:46');
-
 -- --------------------------------------------------------
 
 --
@@ -98,7 +94,7 @@ INSERT INTO `comment_replies` (`id`, `user_id`, `comment_id`, `content`, `active
 CREATE TABLE `logs` (
   `id` int(11) NOT NULL,
   `user_id` int(11) DEFAULT NULL,
-  `action_type` enum('CREATE','UPDATE','DELETE','LOGIN','LOGOUT','VIEW') NOT NULL,
+  `action_type` enum('CREATE','UPDATE','DELETE','LOGIN','LOGOUT','VIEW','ACTIVATE') NOT NULL,
   `table_name` varchar(50) DEFAULT NULL,
   `record_id` int(11) DEFAULT NULL,
   `description` text DEFAULT NULL,
@@ -111,9 +107,45 @@ CREATE TABLE `logs` (
 --
 
 INSERT INTO `logs` (`id`, `user_id`, `action_type`, `table_name`, `record_id`, `description`, `ip_address`, `created_at`) VALUES
-(1, 1, 'LOGIN', 'users', 1, 'Connexion de l’admin', '192.168.1.1', '2025-03-07 14:40:46'),
-(2, 2, 'CREATE', 'comments', 1, 'Ajout d’un commentaire sur Email Phishing', '192.168.1.2', '2025-03-07 14:40:46'),
-(3, 1, 'CREATE', 'phishing_types', 1, 'Ajout du type Email Phishing', '192.168.1.1', '2025-03-07 14:40:46');
+(1, 1, 'CREATE', 'users', 1, 'Inscription de l\'utilisateur : tutow@mailinator.com', '127.0.0.1', '2025-03-12 14:53:40'),
+(2, 1, 'LOGIN', 'users', 1, 'Connexion de l\'utilisateur : tutow@mailinator.com', '127.0.0.1', '2025-03-12 14:55:27'),
+(3, 1, 'LOGIN', 'users', 1, 'Connexion de l\'utilisateur : tutow@mailinator.com', '127.0.0.1', '2025-03-12 15:30:45'),
+(4, 1, 'CREATE', 'phishing_types', 1, 'Création du type de phishing : Phishing par email', '127.0.0.1', '2025-03-12 15:41:03'),
+(5, 1, 'CREATE', 'phishing_types', 2, 'Création du type de phishing : Spear Phishing', '127.0.0.1', '2025-03-12 15:47:51'),
+(6, 1, 'CREATE', 'phishing_types', 3, 'Création du type de phishing : Phishing par Téléphone (Vishing)', '127.0.0.1', '2025-03-12 16:10:47'),
+(7, 2, 'CREATE', 'users', 2, 'Inscription de l\'utilisateur : nacyhulata@mailinator.com', '127.0.0.1', '2025-03-12 16:48:31'),
+(8, 2, 'LOGIN', 'users', 2, 'Connexion de l\'utilisateur : nacyhulata@mailinator.com', '127.0.0.1', '2025-03-12 16:48:57'),
+(9, 2, 'LOGIN', 'users', 2, 'Connexion de l\'utilisateur : nacyhulata@mailinator.com', '127.0.0.1', '2025-03-12 16:57:28'),
+(10, 3, 'CREATE', 'users', 3, 'Inscription de l\'utilisateur : baheb@mailinator.com', '127.0.0.1', '2025-03-12 16:58:11'),
+(11, 3, 'LOGIN', 'users', 3, 'Connexion de l\'utilisateur : baheb@mailinator.com', '127.0.0.1', '2025-03-12 16:58:37'),
+(12, 1, 'LOGIN', 'users', 1, 'Connexion de l\'utilisateur : tutow@mailinator.com', '127.0.0.1', '2025-03-12 19:34:51'),
+(13, 1, 'LOGIN', 'users', 1, 'Connexion de l\'utilisateur : tutow@mailinator.com', '127.0.0.1', '2025-03-13 00:35:16'),
+(14, 1, 'LOGIN', 'users', 1, 'Connexion de l\'utilisateur : tutow@mailinator.com', '127.0.0.1', '2025-03-13 00:37:08'),
+(15, 1, 'LOGIN', 'users', 1, 'Connexion de l\'utilisateur : tutow@mailinator.com', '127.0.0.1', '2025-03-13 13:01:48'),
+(16, 1, 'LOGIN', 'users', 1, 'Connexion de l\'utilisateur : tutow@mailinator.com', '127.0.0.1', '2025-03-13 13:03:00'),
+(17, 2, 'LOGIN', 'users', 2, 'Connexion de l\'utilisateur : nacyhulata@mailinator.com', '127.0.0.1', '2025-03-13 13:25:29'),
+(18, 2, 'LOGIN', 'users', 2, 'Connexion de l\'utilisateur : nacyhulata@mailinator.com', '127.0.0.1', '2025-03-13 13:28:21'),
+(19, 1, 'LOGIN', 'users', 1, 'Connexion de l\'utilisateur : tutow@mailinator.com', '127.0.0.1', '2025-03-13 17:53:02'),
+(20, 1, 'LOGIN', 'users', 1, 'Connexion de l\'utilisateur : tutow@mailinator.com', '127.0.0.1', '2025-03-13 18:10:20'),
+(21, 1, 'LOGIN', 'users', 1, 'Connexion de l\'utilisateur : tutow@mailinator.com', '127.0.0.1', '2025-03-13 18:22:42'),
+(22, NULL, 'DELETE', 'users', NULL, 'Desactivation de l\'utilisateur : ', '127.0.0.1', '2025-03-13 18:25:01'),
+(23, NULL, 'ACTIVATE', 'users', NULL, 'Activation de l\'utilisateur : ', '127.0.0.1', '2025-03-13 18:28:07'),
+(24, NULL, 'DELETE', 'users', NULL, 'Desactivation de l\'utilisateur : ', '127.0.0.1', '2025-03-13 18:28:58'),
+(25, NULL, 'ACTIVATE', 'users', NULL, 'Activation de l\'utilisateur : ', '127.0.0.1', '2025-03-13 18:29:03'),
+(26, NULL, 'DELETE', 'users', NULL, 'Desactivation de l\'utilisateur : ', '127.0.0.1', '2025-03-13 18:30:16'),
+(27, NULL, 'ACTIVATE', 'users', NULL, 'Activation de l\'utilisateur : baheb@mailinator.com', '127.0.0.1', '2025-03-13 18:32:53'),
+(28, NULL, 'DELETE', 'users', NULL, 'Desactivation de l\'utilisateur : baheb@mailinator.com', '127.0.0.1', '2025-03-13 18:33:08'),
+(29, 1, 'LOGIN', 'users', 1, 'Connexion de l\'utilisateur : tutow@mailinator.com', '127.0.0.1', '2025-03-13 23:58:28'),
+(30, 1, 'LOGIN', 'users', 1, 'Connexion de l\'utilisateur : tutow@mailinator.com', '127.0.0.1', '2025-03-14 01:49:48'),
+(31, NULL, 'UPDATE', 'phishing_types', 3, 'Activation du type de phishing : ', '127.0.0.1', '2025-03-14 02:06:48'),
+(32, NULL, 'ACTIVATE', 'phishing_types', 2, 'Activation du type de phishing : ', '127.0.0.1', '2025-03-14 02:16:25'),
+(33, 1, 'DELETE', 'phishing_types', 2, 'Desactivation du type de phishing : ', '127.0.0.1', '2025-03-14 02:17:43'),
+(34, 1, 'ACTIVATE', 'phishing_types', 2, 'Activation du type de phishing : ', '127.0.0.1', '2025-03-14 02:18:16'),
+(35, NULL, 'DELETE', 'phishing_types', 1, 'Desactivation du type de phishing : ', '127.0.0.1', '2025-03-14 02:19:32'),
+(36, NULL, 'DELETE', 'phishing_types', 2, 'Desactivation du type de phishing : ', '127.0.0.1', '2025-03-14 02:19:36'),
+(37, 1, 'LOGIN', 'users', 1, 'Connexion de l\'utilisateur : tutow@mailinator.com', '127.0.0.1', '2025-03-14 12:01:02'),
+(38, NULL, 'ACTIVATE', 'phishing_types', 2, 'Activation du type de phishing : ', '127.0.0.1', '2025-03-14 12:01:11'),
+(39, NULL, 'ACTIVATE', 'phishing_types', 1, 'Activation du type de phishing : ', '127.0.0.1', '2025-03-14 12:01:14');
 
 -- --------------------------------------------------------
 
@@ -135,8 +167,9 @@ CREATE TABLE `phishing_types` (
 --
 
 INSERT INTO `phishing_types` (`id`, `title`, `description`, `image`, `active`, `created_at`) VALUES
-(1, 'Email Phishing', 'Attaque utilisant des emails frauduleux imitant des entités légitimes.', 'email_phishing.jpg', 1, '2025-03-07 14:40:46'),
-(2, 'Spear Phishing', 'Phishing ciblé avec des données personnalisées.', 'spear_phishing.jpg', 1, '2025-03-07 14:40:46');
+(1, 'Phishing par email', 'Cette attaque consiste à envoyer des emails frauduleux qui semblent provenir d\'une source légitime (banque, service en ligne, entreprise) pour inciter la victime à divulguer des informations sensibles (identifiants, mots de passe, numéros de carte bancaire).', '67d1ab0f9c0a6_solen-feyissa-HQSEvyN56K0-unsplash.jpg', 1, '2025-03-12 15:41:03'),
+(2, 'Spear Phishing', 'Variante ciblée du phishing où l\'attaquant personnalise l’attaque en fonction des informations sur la victime (nom, entreprise, poste) pour paraître plus crédible et augmenter les chances de succès.', '67d1aca793758_istockphoto-1814949098-1024x1024.jpg', 1, '2025-03-12 15:47:51'),
+(3, 'Phishing par Téléphone (Vishing)', 'Le vishing est une technique où un attaquant appelle une victime en se faisant passer pour une entreprise ou une administration afin d\'obtenir des informations sensibles.', '67d1b207c1ba0_thewildrobot-poster-66686a8d0fd04-1.jpg', 1, '2025-03-12 16:10:47');
 
 -- --------------------------------------------------------
 
@@ -156,11 +189,15 @@ CREATE TABLE `protections` (
 --
 
 INSERT INTO `protections` (`id`, `phishing_type_id`, `content`, `active`) VALUES
-(1, 1, 'Vérifiez l’expéditeur avant de cliquer sur quoi que ce soit.', 1),
-(2, 1, 'Évitez de cliquer sur les liens suspects dans les emails.', 1),
-(3, 1, 'Utilisez un filtre antispam pour réduire les risques.', 1),
-(4, 2, 'Confirmez toute demande inhabituelle par un autre canal (ex. : téléphone).', 1),
-(5, 2, 'Méfiez-vous des emails qui semblent trop personnalisés.', 1);
+(1, 1, 'Toujours vérifier l’adresse email de l’expéditeur avant d’ouvrir un email suspect.', 1),
+(2, 1, 'Ne jamais cliquer sur un lien sans vérifier l’URL en le survolant avec la souris.', 1),
+(3, 1, 'Activer l’authentification à deux facteurs (2FA) sur les services sensibles.', 1),
+(4, 1, 'Utiliser des filtres anti-phishing dans les boîtes mail.', 1),
+(5, 1, 'Ne jamais fournir d’informations personnelles ou bancaires par email.', 1),
+(6, 2, 'Sensibiliser les employés aux dangers du spear phishing et à la vérification des emails.', 1),
+(7, 2, 'Ne jamais ouvrir de pièce jointe non attendue, même si elle semble venir d’un collègue.', 1),
+(8, 3, 'Ne jamais divulguer d’informations sensibles par téléphone.', 1),
+(9, 3, 'Raccrocher et contacter directement l’organisme via un numéro officiel.', 1);
 
 -- --------------------------------------------------------
 
@@ -181,6 +218,7 @@ CREATE TABLE `users` (
   `profile_picture` varchar(255) DEFAULT NULL,
   `role` enum('user','admin') DEFAULT 'user',
   `active` tinyint(1) DEFAULT 1,
+  `last_login` date DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -188,13 +226,10 @@ CREATE TABLE `users` (
 -- Déchargement des données de la table `users`
 --
 
-INSERT INTO `users` (`id`, `last_name`, `first_name`, `birth_date`, `nationality`, `identity_number`, `email`, `gender`, `password`, `profile_picture`, `role`, `active`, `created_at`) VALUES
-(1, 'Dupont', 'Jean', '1980-05-15', 'Française', 'ID123456789', 'admin@example.com', NULL, '$2y$10$YOUR_HASHED_PASSWORD', 'admin_profile.jpg', 'admin', 1, '2025-03-07 14:40:46'),
-(2, 'Martin', 'Sophie', '1995-08-22', 'Française', 'ID987654321', 'sophie@example.com', NULL, '$2y$10$USER_HASHED_PASSWORD', 'sophie_profile.jpg', 'user', 1, '2025-03-07 14:40:46'),
-(3, 'Crawford', 'Mariam', '1994-03-28', 'Et quis fugiat prae', '443', 'wetaharah@mailinator.com', 'female', '$2y$10$Q0VrecMGIgWQofn0X2b2fOcIrXtEOUWmmmIfXKPKlSYID23vGA.Cu', '67cf10ab2ca23_image.png', 'user', 1, '2025-03-10 16:17:47'),
-(4, 'Nelson', 'Irene', '2008-02-24', 'Quo unde suscipit of', '338', 'xajam@mailinator.com', 'female', '$2y$10$MQEh0YsA/Sp/IfPhCYJVVeQ0Bq03vN1Blaf89r2uFYxRUzipM8w/.', '67cf16f64cf56_image.png', 'user', 1, '2025-03-10 16:44:38'),
-(5, 'Hood', 'Prescott', '1984-04-11', 'Beatae cillum qui ne', '984', 'ramecox@mailinator.com', 'male', '$2y$10$.urAAMuBo/gPeHH.58rffOOjFasxTgxWfOBPyEgePqwQQdjSfVOda', '67cf4a84e35a2_image.png', 'user', 1, '2025-03-10 20:24:37'),
-(6, 'Morin', 'Lewis', '1995-10-30', 'Sint optio tempora ', '768', 'mowecap@mailinator.com', 'female', '$2y$10$SBQBwEHsTHLWDcVJsOBQH.kp7bb2wTlB3WFrXjPi0o185DFsGm11q', '67cf4d753f18a_image.png', 'admin', 1, '2025-03-10 20:37:09');
+INSERT INTO `users` (`id`, `last_name`, `first_name`, `birth_date`, `nationality`, `identity_number`, `email`, `gender`, `password`, `profile_picture`, `role`, `active`, `last_login`, `created_at`) VALUES
+(1, 'Administrateur', 'Keren', '2002-02-19', 'Congolaise', 'ID8989898', 'tutow@mailinator.com', 'female', '$2y$10$0WFzCVQFT7qZAaXzMs3D6OpZw8d6YFfBvyWXFYOFFnMaU9Ew/zmwe', '67d19ff3d1e53_image.png', 'admin', 1, '2025-03-14', '2025-03-12 14:53:39'),
+(2, 'Malundu', 'Ephraim', '1995-11-14', 'Française', 'ID89898456', 'nacyhulata@mailinator.com', 'male', '$2y$10$SQ9V3ZZG/06MP9qAQ.bubeeacVtIniQYCPnGZFfk9fk15DBLV2ACy', '67d2e070f3703.jpg', 'user', 1, '2025-03-13', '2025-03-12 16:48:31'),
+(3, 'Hays', 'Luke', '2021-11-30', 'Irure enim nisi inci', '751', 'baheb@mailinator.com', 'female', '$2y$10$1gQiWH1GJSC3mDmhSDUzje6unhNCBZ9.E2vXLxSUor15fDCSj9dmO', '67d1bd233530b_image.png', 'user', 0, '2025-03-12', '2025-03-12 16:58:11');
 
 --
 -- Index pour les tables déchargées
@@ -259,43 +294,43 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT pour la table `characteristics`
 --
 ALTER TABLE `characteristics`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT pour la table `comments`
 --
 ALTER TABLE `comments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT pour la table `comment_replies`
 --
 ALTER TABLE `comment_replies`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT pour la table `logs`
 --
 ALTER TABLE `logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
 
 --
 -- AUTO_INCREMENT pour la table `phishing_types`
 --
 ALTER TABLE `phishing_types`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT pour la table `protections`
 --
 ALTER TABLE `protections`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT pour la table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- Contraintes pour les tables déchargées
