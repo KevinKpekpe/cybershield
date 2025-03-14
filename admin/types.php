@@ -40,6 +40,13 @@ try {
     echo "Erreur de requête : " . $e->getMessage();
     die();
 }
+if(isset($_SESSION['success'])){
+    echo '<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        createAlert("success", "Succès", "Operation réussie !");
+    })';
+    unset($_SESSION['success']);
+}
 ?>
 
 <div class="dashboard-content">

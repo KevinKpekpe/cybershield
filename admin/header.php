@@ -68,6 +68,16 @@ try {
                                 <li><a href="create-type.php">Ajouter un type</a></li>
                             </ul>
                         </li>
+                        <li class="nav-item-dropdown">
+                            <a href="#comments">
+                                <i class="fas fa-comments"></i>
+                                <span>Commentaires</span>
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                            <ul class="submenu">
+                                <li><a href="comments.php">Tous les commentaires</a></li>
+                            </ul>
+                        </li>
                     </ul>
                 </div>
 
